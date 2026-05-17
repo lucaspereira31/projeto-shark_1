@@ -11,43 +11,10 @@
             background-color: #f4f4f4; 
             display: flex; 
         }
-        
-        /* BARRA ESQUERDA PADRONIZADA */
-        .sidebar-left { 
-            height: 100vh; 
-            width: 220px; 
-            position: fixed; 
-            left: 0; 
-            top: 0; 
-            background-color: #1a1a1a; 
-            color: white; 
-            z-index: 100; 
-        }
-        
-        .sidebar-left h3 { 
-            text-align: center; 
-            color: #53c0f3; 
-            margin: 0; 
-            padding: 28px 0 10px 0; /* Ajustado para alinhar com o index */
-        }
-        
-        .sidebar-left hr { 
-            margin: 0 20px 15px 20px; 
-            border: 0; 
-            border-top: 2px solid #2a2a2a; 
-        }
-
-        /* ESTILO DOS LINKS QUE TINHA SUMIDO */
-        .sidebar-left a { 
-            padding: 15px 20px; 
-            text-decoration: none; 
-            font-size: 14px; 
-            color: #ccc; 
-            display: block; 
-            border-bottom: 1px solid #2a2a2a; 
-            transition: 0.3s;
-        }
-
+        /* BARRA ESQUERDA (Menu) */
+        .sidebar-left { height: 100vh; width: 220px; position: fixed; left: 0; top: 0; background-color: #1a1a1a; color: white; padding-top: 20px; z-index: 100; }
+        .sidebar-left h3 { text-align: center; color: #53c0f3; }
+        .sidebar-left a { padding: 15px 20px; text-decoration: none; font-size: 14px; color: #ccc; display: block; border-bottom: 1px solid #2a2a2a; }
         .sidebar-left a:hover { background-color: #53c0f3; color: white; }
 
         /* CONTEÚDO AJUSTADO */
@@ -76,18 +43,18 @@
         .btn-add {
             background-color: #1a1a1a; color: #53c0f3; border: 2px solid #53c0f3;
             padding: 10px 20px; cursor: pointer; font-weight: bold; border-radius: 5px;
-            margin-bottom: 20px; transition: 0.3s;
+            transition: 0.3s;
         }
         .btn-add:hover { background-color: #53c0f3; color: white; }
         
-        input[type="number"] { width: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        input[type="number"], input[type="text"] { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
     </style>
 </head>
 <body>
 
     <div class="sidebar-left">
         <h3>SHARK FOODTRUCK</h3>
-        <hr>
+        <hr style="margin: 10px 20px; border: 0.5px solid #333;">
         <a href="{{ url_for('index') }}">📋 Registro de Pedidos</a>
         <a href="{{ url_for('custos') }}">💰 Custos e Lucros</a>
         <a href="{{ url_for('estoque') }}">📦 Estoque</a>
@@ -97,40 +64,53 @@
     <div class="main-content">
         <h1>CONTROLE DE ESTOQUE</h1>
 
-        <button class="btn-add">+ ADICIONAR NOVO ITEM</button>
+        <div class="card" id="form-novo">
+            <h3>+ Cadastrar Novo Item no Inventário</h3>
+            <form action="{{ url_for('cadastrar_item_estoque') }}" method="POST" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <input type="text" name="nome" placeholder="Nome do Item (Ex: Pão, Carne)" required style="flex: 2;">
+                <input type="text" name="unidade" placeholder="Unid (Kg, Un)" required style="flex: 1;">
+                <input type="number" step="0.01" name="quantidade" placeholder="Qtd Inicial" required style="flex: 1;">
+                <button type="submit" class="btn-add">CADASTRAR</button>
+            </form>
+        </div>
 
         <div class="card">
             <h3>📊 Conferência Semanal</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Item do Inventário</th>
-                        <th>Estoque Inicial</th>
-                        <th>Estoque Final</th>
-                        <th>Consumo Real</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Pão de Hambúrguer (Un)</td>
-                        <td><input type="number" placeholder="0"></td>
-                        <td><input type="number" placeholder="0"></td>
-                        <td><strong>--</strong></td>
-                    </tr>
-                    <tr>
-                        <td>Carne Blend (Kg)</td>
-                        <td><input type="number" placeholder="0"></td>
-                        <td><input type="number" placeholder="0"></td>
-                        <td><strong>--</strong></td>
-                    </tr>
-                </tbody>
-            </table>
-            
-            <div style="margin-top: 30px;">
-                <button style="background-color: #2ecc71; color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-weight: bold;">
-                    SALVAR ALTERAÇÕES
-                </button>
-            </div>
+            <form action="{{ url_for('atualizar_estoque') }}" method="POST">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item do Inventário</th>
+                            <th>Estoque Atual (Registrado)</th>
+                            <th>Novo Estoque Final</th>
+                            <th>Unidade</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in estoque %}
+                        <tr>
+                            <td>{{ item.nome }}</td>
+                            <td><strong>{{ item.quantidade_estoque }}</strong></td>
+                            <td>
+                                <input type="number" step="0.01" name="qtd_{{ item.idinsumos }}" placeholder="0" style="width: 100px;">
+                            </td>
+                            <td>{{ item.unidade_medida }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% if not estoque %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: #999; padding: 20px;">Nenhum insumo cadastrado no estoque ainda.</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+                
+                <div style="margin-top: 30px;">
+                    <button type="submit" style="background-color: #2ecc71; color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                        SALVAR ALTERAÇÕES
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 

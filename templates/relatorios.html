@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Relatórios Shark</title>
+    <!-- Importando o Chart.js para os gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -12,38 +14,19 @@
         }
         
         /* BARRA ESQUERDA (Menu) */
-        .sidebar-left { 
-            height: 100vh; 
-            width: 220px; 
-            position: fixed; 
-            left: 0; 
-            top: 0; 
-            background-color: #1a1a1a; 
-            color: white; 
-            padding-top: 20px; 
-            z-index: 100; 
-        }
+        .sidebar-left { height: 100vh; width: 220px; position: fixed; left: 0; top: 0; background-color: #1a1a1a; color: white; padding-top: 20px; z-index: 100; }
         .sidebar-left h3 { text-align: center; color: #53c0f3; }
-        .sidebar-left a { 
-            padding: 15px 20px; 
-            text-decoration: none; 
-            font-size: 14px; 
-            color: #ccc; 
-            display: block; 
-            border-bottom: 1px solid #2a2a2a; 
-            transition: 0.3s;
-        }
+        .sidebar-left a { padding: 15px 20px; text-decoration: none; font-size: 14px; color: #ccc; display: block; border-bottom: 1px solid #2a2a2a; }
         .sidebar-left a:hover { background-color: #53c0f3; color: white; }
 
-        /* AJUSTE PARA O CONTEÚDO NÃO FICAR EMBAIXO DO MENU */
+        /* CONTEÚDO PRINCIPAL */
         .main-content {
-    margin-left: 220px; /* Largura da sidebar esquerda */
-    margin-right: 0;    /* Não tem sidebar direita nessas telas */
-    padding: 40px;
-    width: calc(100% - 220px); 
-    min-height: 100vh;
-    box-sizing: border-box; /* Garante que o padding não "estique" a tela */
-}
+            margin-left: 220px; 
+            padding: 40px;
+            width: calc(100% - 220px); 
+            min-height: 100vh;
+            box-sizing: border-box; 
+        }
 
         .card {
             background: white;
@@ -54,7 +37,27 @@
         }
 
         h1 { color: #1a1a1a; border-bottom: 2px solid #53c0f3; padding-bottom: 10px; }
-        input, textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; }
+        
+        /* Estilização dos Cards de Métrica */
+        .metric-title {
+            font-size: 14px;
+            color: #666;
+            margin: 0 0 5px 0;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+        .metric {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        /* Container do Gráfico para não quebrar o layout */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -70,28 +73,67 @@
     <div class="main-content">
         <h1>RELATÓRIOS SEMANAIS</h1>
         
-        <div style="display: flex; gap: 20px;">
+        <!-- Cards Dinâmicos -->
+        <div style="display: flex; gap: 20px; margin-bottom: 20px;">
             <div class="card" style="flex: 1;">
-                <p>Total de Vendas</p>
-                <div class="metric">R$ 5.000,00</div>
+                <p class="metric-title">Total de Vendas</p>
+                <div class="metric">R$ {{ "%.2f"|format(total_vendas) }}</div>
             </div>
             <div class="card" style="flex: 1;">
-                <p>Total de Custos</p>
-                <div class="metric" style="color: #e74c3c;">R$ 2.300,00</div>
+                <p class="metric-title">Total de Custos</p>
+                <div class="metric" style="color: #e74c3c;">R$ {{ "%.2f"|format(total_custos) }}</div>
             </div>
             <div class="card" style="flex: 1;">
-                <p>Lucro Líquido</p>
-                <div class="metric" style="color: #2ecc71;">R$ 2.700,00</div>
+                <p class="metric-title">Lucro Líquido</p>
+                <div class="metric" style="color: #2ecc71;">R$ {{ "%.2f"|format(lucro_liquido) }}</div>
             </div>
         </div>
 
+        <!-- Gráfico Real -->
         <div class="card">
             <h3>📈 Desempenho por Dia</h3>
-            <p>(Aqui entrará o seu gráfico de barras)</p>
-            <div style="height: 150px; background: #eee; border-radius: 5px; display: flex; align-items: center; justify-content: center; color: #999;">
-                Área reservada para o Gráfico de Vendas
+            <div class="chart-container">
+                <canvas id="graficoVendas"></canvas>
             </div>
         </div>
     </div>
+
+    <!-- Script para renderizar o gráfico com os dados do Flask -->
+    <script>
+        const ctx = document.getElementById('graficoVendas').getContext('2d');
+        
+        // Pegando os dados enviados pelo Flask (convertidos para JSON seguro)
+        const labelsDias = {{ dias|tojson }};
+        const dadosVendas = {{ vendas_diarias|tojson }};
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labelsDias,
+                datasets: [{
+                    label: 'Vendas Diárias (R$)',
+                    data: dadosVendas,
+                    backgroundColor: '#53c0f3',
+                    borderColor: '#29a1d4',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return 'R$ ' + value.toFixed(2);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 </html>
