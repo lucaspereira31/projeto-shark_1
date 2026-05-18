@@ -48,6 +48,23 @@
         .btn-add:hover { background-color: #53c0f3; color: white; }
         
         input[type="number"], input[type="text"] { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+
+        /* ADICIONADO O ESTILO DO BOTÃO DE EXCLUIR */
+        .btn-excluir {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-block;
+        }
+        .btn-excluir:hover {
+            background-color: #c0392b;
+        }
     </style>
 </head>
 <body>
@@ -84,7 +101,7 @@
                             <th>Estoque Atual (Registrado)</th>
                             <th>Novo Estoque Final</th>
                             <th>Unidade</th>
-                        </tr>
+                            <th>Ações</th> </tr>
                     </thead>
                     <tbody>
                         {% for item in estoque %}
@@ -95,11 +112,19 @@
                                 <input type="number" step="0.01" name="qtd_{{ item.idinsumos }}" placeholder="0" style="width: 100px;">
                             </td>
                             <td>{{ item.unidade_medida }}</td>
+                            <td>
+                                <a href="{{ url_for('excluir_estoque', id=item.idinsumos) }}" 
+                                   class="btn-excluir" 
+                                   onclick="return confirm('Tem certeza que deseja excluir este insumo do estoque?');">
+                                   🗑️ Excluir
+                                </a>
+                            </td>
                         </tr>
                         {% endfor %}
+                        
                         {% if not estoque %}
                         <tr>
-                            <td colspan="4" style="text-align: center; color: #999; padding: 20px;">Nenhum insumo cadastrado no estoque ainda.</td>
+                            <td colspan="5" style="text-align: center; color: #999; padding: 20px;">Nenhum insumo cadastrado no estoque ainda.</td>
                         </tr>
                         {% endif %}
                     </tbody>

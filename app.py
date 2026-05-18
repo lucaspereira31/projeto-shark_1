@@ -296,6 +296,18 @@ def excluir_custo(id):
         cursor.close()
         conn.close()
     return redirect(url_for('custos'))
+@app.route('/excluir-estoque/<int:id>')
+def excluir_estoque(id):
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor()
+        # Deleta o insumo usando a chave primária correta: idinsumos
+        cursor.execute("DELETE FROM insumos WHERE idinsumos = %s", (id,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+    return redirect(url_for('estoque'))
+
 
 if __name__ == "__main__":
     porta = int(os.environ.get("PORT", 5000))
