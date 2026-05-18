@@ -240,13 +240,18 @@ def custos():
     
     if conn:
         cursor = conn.cursor(dictionary=True)
+        
+        # --- MISSÃO 1: Soma as vendas (Fica igualzinho) ---
         cursor.execute("SELECT SUM(total) FROM pedidos")
         res_vendas = cursor.fetchone()
         vendas_totais = float(res_vendas['SUM(total)']) if res_vendas['SUM(total)'] else 0.0
         
-        cursor.execute("SELECT descricao, valor, data_custo FROM custos ORDER BY data_custo DESC")
+        # --- MISSÃO 2: Busca os custos (ADICIONADO O id_custo AQUI) ---
+        # Antes estava: SELECT descricao, valor...
+        cursor.execute("SELECT * FROM custos ORDER BY data_custo DESC")
         lista_custos = cursor.fetchall()
         
+        # Calcula o lucro descontando as despesas
         total_gastos = sum(float(c['valor']) for c in lista_custos)
         lucro_final = vendas_totais - total_gastos
         
@@ -269,6 +274,27 @@ def salvar_custos():
             conn.commit()
             cursor.close()
             conn.close()
+    return redirect(url_for('custos'))
+
+@app.route('/excluir-custo/<int:id>')
+def excluir_custo(id):
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor()
+        
+        # Como não temos certeza se é id, id_custo ou idcustos, 
+        # vamos descobrir o nome real da primeira coluna da tabela custos:
+        cursor.execute("SHOW COLUMNS FROM custos")
+        colunas = cursor.fetchall()
+        nome_da_chave_primaria = colunas[0][0] # Pega o nome da primeira coluna da tabela
+        
+        # Agora deleta usando o nome real que está no banco da Aiven
+        query = f"DELETE FROM custos WHERE {nome_da_chave_primaria} = %s"
+        cursor.execute(query, (id,))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
     return redirect(url_for('custos'))
 
 if __name__ == "__main__":

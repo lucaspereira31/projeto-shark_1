@@ -20,6 +20,23 @@
         th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
         th { background-color: #1a1a1a; color: white; }
         .lucro-destaque { background-color: #1a1a1a; color: #53c0f3; border-left: 10px solid #53c0f3; }
+        
+        /* ESTILO DO BOTÃO DE EXCLUIR */
+        .btn-excluir {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-block;
+        }
+        .btn-excluir:hover {
+            background-color: #c0392b;
+        }
     </style>
 </head>
 <body>
@@ -31,7 +48,6 @@
         <a href="{{ url_for('custos') }}">💰 Custos e Lucros</a>
         <a href="{{ url_for('estoque') }}">📦 Estoque</a>
         <a href="{{ url_for('relatorios') }}">📊 Relatórios</a>
-    
     </div>
 
     <div class="main-content">
@@ -61,7 +77,7 @@
                         <th>Data</th>
                         <th>Descrição</th>
                         <th>Valor</th>
-                    </tr>
+                        <th>Ações</th> </tr>
                 </thead>
                 <tbody>
                     {% for c in custos_lista %}
@@ -69,6 +85,13 @@
                         <td>{{ c.data_custo }}</td>
                         <td>{{ c.descricao }}</td>
                         <td style="color: #e74c3c; font-weight: bold;">- R$ {{ c.valor }}</td>
+                        <td>
+                        <a href="{{ url_for('excluir_custo', id=c.values()|list|first) }}" 
+                        class="btn-excluir" 
+                        onclick="return confirm('Tem certeza que deseja excluir este custo?');">
+                        🗑️ Excluir
+                        </a>
+                    </td>
                     </tr>
                     {% endfor %}
                 </tbody>
