@@ -1,14 +1,13 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session,flash
 import os
 import mysql.connector
 from dotenv import load_dotenv
-load_dotenv()
 from datetime import datetime, date
-from dotenv import load_dotenv
-load_dotenv()
+
 
 app = Flask(__name__)
 app.secret_key = "shark_foodtruck_key"
+SENHA_SISTEMA = "shark123"
 
 menu = {
     "ZOIÃO SIMPLES": 17.00, "BURGUER": 20.00, "SALADA": 22.00,
@@ -39,6 +38,9 @@ def get_produto_id(cursor, nome, preco):
 
 @app.route("/", methods=["GET", "POST"])
 def index():
+    if not session.get('logado'):
+            return redirect(url_for('login'))
+
     if "pedido" not in session: session["pedido"] = []
     if "cliente" not in session: session["cliente"] = {"nome": "Consumidor", "telefone": ""}
     
@@ -123,6 +125,8 @@ def limpar_pedido():
 
 @app.route('/estoque')
 def estoque():
+    if not session.get('logado'):
+        return redirect(url_for('login'))
     conn = get_db_connection()
     itens_estoque = []
     if conn:
@@ -168,6 +172,8 @@ def cadastrar_item_estoque():
 
 @app.route('/relatorios')
 def relatorios():
+    if not session.get('logado'):
+        return redirect(url_for('login'))
     conn = get_db_connection()
     vendas_diarias_db = []
     total_custos = 0.0
@@ -233,6 +239,9 @@ def relatorios():
 
 @app.route('/custos')
 def custos():
+    if not session.get('logado'):
+        return redirect(url_for('login'))
+    
     conn = get_db_connection()
     vendas_totais = 0.0
     lista_custos = []
@@ -307,6 +316,29 @@ def excluir_estoque(id):
         cursor.close()
         conn.close()
     return redirect(url_for('estoque'))
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        senha_digitada = request.form.get('senha')
+        
+        if senha_digitada == SENHA_SISTEMA:
+            session['logado'] = True
+            flash('Login realizado com sucesso!', 'success')
+            return redirect(url_for('index')) # Redireciona para a página principal do seu sistema
+        else:
+            flash('Senha incorreta. Tente novamente.', 'danger')
+            
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('logado', None)
+    flash('Você saiu do sistema.', 'info')
+    return redirect(url_for('login'))
+
+
+
 
 
 if __name__ == "__main__":
